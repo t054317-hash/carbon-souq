@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carbon Souq</title>
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Kufi+Arabic:wght@400;500;700&display=swap">
+
+<!-- Tailwind is still the Play CDN build. That is security finding 13 and it is
+     unchanged: moving to the PostCSS build is a separate job. -->
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          ground:  'rgb(var(--ground-rgb) / <alpha-value>)',
+          surface: 'rgb(var(--surface-rgb) / <alpha-value>)',
+          raised:  'rgb(var(--raised-rgb) / <alpha-value>)',
+          line:    'rgb(var(--line-rgb) / <alpha-value>)',
+          ink:     'rgb(var(--ink-rgb) / <alpha-value>)',
+          muted:   'rgb(var(--muted-rgb) / <alpha-value>)',
+          faint:   'rgb(var(--faint-rgb) / <alpha-value>)',
+          accent:  'rgb(var(--accent-rgb) / <alpha-value>)',
+          ignite:  'rgb(var(--ignite-rgb) / <alpha-value>)',
+          violet:  'rgb(var(--violet-rgb) / <alpha-value>)',
+          good:    'rgb(var(--good-rgb) / <alpha-value>)',
+          bad:     'rgb(var(--bad-rgb) / <alpha-value>)'
+        },
+        fontFamily: {
+          display: ['Chakra Petch', 'Noto Kufi Arabic', 'system-ui', 'sans-serif'],
+          body: ['Barlow', 'Noto Kufi Arabic', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+        },
+        boxShadow: {
+          lift: '0 18px 50px -18px rgb(0 0 0 / .55)',
+          hud: '0 0 0 1px rgb(var(--line-rgb) / .9), 0 24px 60px -24px rgb(0 0 0 / .7)'
+        }
+      }
+    }
+  }
+</script>
+
+<script>
+  /* Resolve the theme before React mounts so the first painted frame is right. */
+  (function () {
+    var stored = null;
+    try { stored = localStorage.getItem('cs.theme'); } catch (e) {}
+    var host = document.documentElement.getAttribute('data-theme');
+    var dark = stored ? stored === 'dark'
+      : host ? host === 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', dark);
+  })();
+</script>
+</head>
+<body>
+  <div id="boot" style="position:fixed;inset:0;display:grid;place-items:center;background:rgb(var(--ground-rgb));z-index:60">
+    <div style="text-align:center">
+      <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;letter-spacing:.34em;font-size:.8rem;text-transform:uppercase;color:rgb(var(--accent-rgb))">Carbon&nbsp;Souq</div>
+      <div style="margin:14px auto 0;width:200px;height:2px;background:rgb(var(--line-rgb));overflow:hidden;position:relative;border-radius:99px">
+        <div style="position:absolute;inset:0;width:40%;border-radius:99px;background:rgb(var(--accent-rgb));animation:sweep 1.15s ease-in-out infinite"></div>
+      </div>
+      <div style="margin-top:12px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgb(var(--faint-rgb))">Priming fuel system</div>
+    </div>
+  </div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
