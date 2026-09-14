@@ -14,8 +14,15 @@ import { BTN, Btn, Chip, Drawer, Field, Input, Menu, MenuItem, Modal, ModalHead,
    the network, so the UI components stayed exactly as they were.
    ========================================================================== */
 
-const SUPABASE_URL = 'https://bzsrnypedhkbbxttdcln.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_vB2GchzdJq9MA2K4QKPEWQ_4pe_ysR3';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error(
+    'Missing VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY. ' +
+    'Copy .env.example to .env locally, and set both in the Vercel project settings.'
+  );
+}
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
@@ -42,8 +49,8 @@ const toJson = v => {
 const fromDbPart = r => ({
   id: r.id,
   name: toTuple(r.name),
-  oem: r.oem || '',
-  brand: r.brand,
+  oem: r.oem_number || '',
+  brand: r.make,
   price: Number(r.price_kwd),
   prio: r.priority,
   art: r.art,
@@ -57,13 +64,13 @@ const fromDbPart = r => ({
 
 const toDbPart = p => ({
   name: toJson(p.name),
-  oem: p.oem || null,
-  brand: p.brand,
+  oem_number: p.oem || '',
+  make: p.brand,
   price_kwd: p.price,
   priority: p.prio,
   art: p.art,
   anchor: p.anchor,
-  spec: p.spec ? toJson(p.spec) : null,
+  spec: toJson(p.spec || ['', '', '']),
   photo_url: p.photo || null
 });
 
@@ -132,10 +139,10 @@ const DB = {
   async vehicles() {
     const { data, error } = await sb.from('vehicles').select('*').order('created_at');
     if (error) throw error;
-    return data.map(v => ({ id: v.id, brand: v.brand, model: v.model, year: String(v.year || ''), plate: v.plate || '', primary: v.is_primary }));
+    return data.map(v => ({ id: v.id, brand: v.make, model: v.model, year: String(v.year || ''), plate: v.plate || '', primary: v.is_primary }));
   },
   addVehicle: (uid, v, first) => sb.from('vehicles')
-    .insert({ user_id: uid, brand: v.brand, model: v.model, year: parseInt(v.year, 10) || null, plate: v.plate || null, is_primary: first }),
+    .insert({ user_id: uid, make: v.brand, model: v.model || '', year: parseInt(v.year, 10) || null, plate: v.plate || '', is_primary: first }),
   removeVehicle: id => sb.from('vehicles').delete().eq('id', id),
   async setPrimaryVehicle(uid, id) {
     // the partial unique index allows one primary per user, so clear first
@@ -164,7 +171,7 @@ const DB = {
       eta: new Date(o.eta).getTime(),
       addr: o.address,
       items: (o.order_items || []).map(i => ({
-        id: i.id, name: toTuple(i.name), oem: i.oem, price: Number(i.price_kwd),
+        id: i.id, name: toTuple(i.name), oem: i.oem_number || '', price: Number(i.price_kwd),
         qty: i.qty, art: i.art, photo: i.photo_url || ''
       }))
     }));
@@ -191,8 +198,8 @@ const DB = {
 
   saveAddress: (uid, a) => sb.from('addresses').upsert({
     user_id: uid, governorate: a.gov, area: a.area, block: a.block, street: a.street,
-    avenue: a.ave || null, house: a.house, floor: a.floor || null,
-    phone: a.phone.replace(/\D/g, ''), notes: a.notes || null,
+    avenue: a.ave || '', house: a.house, floor: a.floor || '',
+    phone: a.phone.replace(/\D/g, ''), notes: a.notes || '',
     pin_x: a.pin ? a.pin.x : null, pin_y: a.pin ? a.pin.y : null
   })
 };
